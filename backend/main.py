@@ -8,7 +8,7 @@ import re
 import os
 
 
-def main(page: ft.Page):
+async def main(page: ft.Page):
     page.title = "YT Audio Downloader"
     page.theme_mode = "dark"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
@@ -16,21 +16,21 @@ def main(page: ft.Page):
 
     server_process = None
 
-    def window_event(e):
+    async def window_event(e):
         if e.data == "close":
             if server_process:
                 server_process.terminate()
-            page.window.destroy()
+            page.window_destroy()
 
-    page.window.prevent_close = True
-    page.window.on_event = window_event
+    page.window_prevent_close = True
+    page.on_window_event = window_event
 
     url_input = ft.TextField(label="URL de YouTube", width=400, disabled=True)
     status_text = ft.Text("Servidor apagado.", color="red")
     progress_bar = ft.ProgressBar(width=400, value=0, visible=False)
     progress_details = ft.Text("", visible=False)
 
-    def start_server(e):
+    async def start_server(e):
         nonlocal server_process
         if server_process is None:
             status_text.value = "Iniciando motor local..."
@@ -130,7 +130,8 @@ def main(page: ft.Page):
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
         )
     )
+    page.update()
 
 
 if __name__ == "__main__":
-    ft.app(main)
+    ft.run(main, view=ft.AppView.FLET_APP)
