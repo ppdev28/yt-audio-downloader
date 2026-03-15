@@ -8,6 +8,21 @@ import re
 import os
 
 
+def get_resource_path(relative_path: str) -> str:
+    """
+    Obtiene la ruta absoluta al recurso.
+    Compatible con el entorno de desarrollo local y el empaquetado de PyInstaller.
+    """
+    try:
+        # PyInstaller crea una carpeta temporal y almacena la ruta en _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Si _MEIPASS no existe, estamos en desarrollo local
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 async def main(page: ft.Page):
     page.title = "YT Audio Downloader"
     page.theme_mode = "dark"
@@ -37,15 +52,15 @@ async def main(page: ft.Page):
             status_text.color = "orange"
             page.update()
 
-            # Get the directory of the current script
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            api_path = os.path.join(script_dir, "api.py")
+            # 1. Resolvemos la ruta absoluta del microservicio
+            api_script_path = get_resource_path("backend/api.py")
 
-            server_process = subprocess.Popen([sys.executable, api_path])
+            # 2. Lanzamos el proceso hijo asegurando compatibilidad de empaquetado
+            server_process = subprocess.Popen([sys.executable, api_script_path])
 
             url_input.disabled = False
             start_btn.disabled = True
-            status_text.value = "🟢 Servidor en línea"
+            status_text.value = "🟢 Servidor en línea (localhost:8000)"
             status_text.color = "green"
             page.update()
 
