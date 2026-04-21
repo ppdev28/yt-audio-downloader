@@ -16,6 +16,21 @@ def get_resource_path(*path_parts):
     return os.path.join(base_path, *path_parts)
 
 
+def get_resource_path(relative_path: str) -> str:
+    """
+    Obtiene la ruta absoluta al recurso.
+    Compatible con el entorno de desarrollo local y el empaquetado de PyInstaller.
+    """
+    try:
+        # PyInstaller crea una carpeta temporal y almacena la ruta en _MEIPASS
+        base_path = sys._MEIPASS
+    except AttributeError:
+        # Si _MEIPASS no existe, estamos en desarrollo local
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 async def main(page: ft.Page):
     page.title = "YT Audio Downloader"
     page.theme_mode = "dark"
