@@ -2,6 +2,28 @@
 
 This script allows you to download the audio from a YouTube video in MP3 format.
 
+## Download App (macOS, Windows, Linux)
+
+Prebuilt executables are published in the repository Releases.
+
+1. Open the [Releases](../../releases) page.
+2. Download the file for your system:
+   - `yt-audio-downloader-macos.tar.gz`
+   - `yt-audio-downloader-linux.tar.gz`
+   - `yt-audio-downloader-windows.zip`
+3. Extract the file and run the executable:
+   - macOS/Linux: `yt-audio-downloader`
+   - Windows: `yt-audio-downloader.exe`
+
+To generate new executables automatically, create and push a tag:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions builds all 3 binaries and uploads them to the new Release.
+
 ## Installation
 
 1.  **Clone the repository:**
@@ -20,12 +42,10 @@ This script allows you to download the audio from a YouTube video in MP3 format.
 
 ## Usage
 
-To download the audio from a YouTube video, use the `run.sh` script:
+To use the program, run `backend/main.py`:
 
 ```bash
-./run.sh <YOUTUBE_URL>
+python3 backend/main.py <YOUTUBE_URL>
 ```
 
-Replace `<YOUTUBE_URL>` with the URL of the YouTube video you want to download. The MP3 file will be saved in the `canciones` folder.
-
-This script will automatically use the Python interpreter from the virtual environment, so you don't need to activate it manually before running it.
+Replace `<YOUTUBE_URL>` with the URL of the YouTube video you want to download. The MP3 file will be saved in the `downloads` folder.
