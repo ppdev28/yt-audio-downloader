@@ -1,0 +1,85 @@
+name: Build Cross-Platform Executables
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_suffix: linux
+            exe_name: yt-audio-downloader
+            data_sep: ":"
+          - os: windows-latest
+            artifact_suffix: windows
+            exe_name: yt-audio-downloader.exe
+            data_sep: ";"
+          - os: macos-latest
+            artifact_suffix: macos
+            exe_name: yt-audio-downloader
+            data_sep: ":"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pyinstaller
+
+      - name: Build executable
+        run: |
+          pyinstaller --noconfirm --windowed --name yt-audio-downloader \
+            --add-data "backend/api.py${{ matrix.data_sep }}backend" \
+            --add-data "backend/downloader.py${{ matrix.data_sep }}backend" \
+            backend/main.py
+
+      - name: Package binary (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          cd dist
+          tar -czf yt-audio-downloader-${{ matrix.artifact_suffix }}.tar.gz ${{ matrix.exe_name }}
+
+      - name: Package binary (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Compress-Archive -Path "dist\${{ matrix.exe_name }}" -DestinationPath "dist\yt-audio-downloader-${{ matrix.artifact_suffix }}.zip"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yt-audio-downloader-${{ matrix.artifact_suffix }}
+          path: |
+            dist/yt-audio-downloader-${{ matrix.artifact_suffix }}.tar.gz
+            dist/yt-audio-downloader-${{ matrix.artifact_suffix }}.zip
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Publish GitHub Release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/**/*.tar.gz
+            release-assets/**/*.zip
