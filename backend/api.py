@@ -5,10 +5,8 @@ import os
 import asyncio
 
 app = FastAPI(title="Motor Local de Descargas")
-downloader = YouTubeAudioDownloader(output_path="./downloads")
-
-# Asegurarse de que el directorio de descargas existe
-os.makedirs("./downloads", exist_ok=True)
+default_downloads_dir = "./downloads"
+os.makedirs(default_downloads_dir, exist_ok=True)
 
 
 @app.websocket("/ws/download")
@@ -35,11 +33,15 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             data = await websocket.receive_json()
             url = data.get("url")
+            output_path = data.get("output_path") or default_downloads_dir
             if not url:
                 await websocket.send_json(
                     {"status": "error", "message": "URL no proporcionada"}
                 )
                 continue
+
+            os.makedirs(output_path, exist_ok=True)
+            downloader = YouTubeAudioDownloader(output_path=output_path)
 
             file_path = await loop.run_in_executor(
                 None,
